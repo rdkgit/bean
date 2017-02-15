@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file:///columbia1/krupczak/rdk/repos/bean/android/HelloBean/HelloBean.iml" filepath="/columbia1/krupczak/rdk/repos/bean/android/HelloBean/HelloBean.iml" />
+      <module fileurl="file:///columbia1/krupczak/rdk/repos/bean/android/HelloBean/app/app.iml" filepath="/columbia1/krupczak/rdk/repos/bean/android/HelloBean/app/app.iml" />
+    </modules>
+  </component>
+</project>

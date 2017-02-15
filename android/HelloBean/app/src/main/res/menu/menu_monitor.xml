@@ -1,0 +1,27 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:context="com.k1computing.hellobean.MonitorActivity" >
+
+        <item android:id="@+id/action_settings"
+            android:title="@string/action_settings"
+            android:orderInCategory="100"
+            app:showAsAction="never" />
+
+        <item android:id="@+id/action_refresh"
+            android:title="@string/action_refresh"
+            android:orderInCategory="100"
+            app:showAsAction="never" />
+
+        <item android:id="@+id/action_start_monitoring"
+            android:title="@string/action_start_monitoring"
+            android:orderInCategory="100"
+            app:showAsAction="never" />
+
+        <item android:id="@+id/action_stop_monitoring"
+            android:title="@string/action_stop_monitoring"
+            android:orderInCategory="100"
+            app:showAsAction="never" />
+
+</menu>
