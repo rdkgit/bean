@@ -19,6 +19,7 @@ import com.punchthrough.bean.sdk.Bean;
 import com.punchthrough.bean.sdk.BeanDiscoveryListener;
 import com.punchthrough.bean.sdk.BeanListener;
 import com.punchthrough.bean.sdk.BeanManager;
+import com.punchthrough.bean.sdk.internal.ble.GattClient;
 import com.punchthrough.bean.sdk.message.Acceleration;
 import com.punchthrough.bean.sdk.message.BatteryLevel;
 import com.punchthrough.bean.sdk.message.BeanError;
@@ -26,8 +27,13 @@ import com.punchthrough.bean.sdk.message.Callback;
 import com.punchthrough.bean.sdk.message.DeviceInfo;
 import com.punchthrough.bean.sdk.message.LedColor;
 import com.punchthrough.bean.sdk.message.ScratchBank;
+import com.punchthrough.bean.sdk.message.ScratchData;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import static android.support.v7.widget.StaggeredGridLayoutManager.TAG;
+import static com.punchthrough.bean.sdk.message.ScratchBank.BANK_1;
 
 public class MetaBean implements BeanListener
 {
@@ -48,6 +54,12 @@ public class MetaBean implements BeanListener
     private Integer lastTemperature;
     private boolean haveMoved = false;
     private double delta = 0.2;
+    //private GattClient gc;
+    private boolean readScratchDataBool = true;
+    private ScratchBank aBank;
+    private int lastMoisture;
+    private boolean moistureDetected = false;
+    private int moistureThreshold = 800;
 
     public MetaBean(Bean aBean, Context aContext)
     {
@@ -86,6 +98,18 @@ public class MetaBean implements BeanListener
         // call pollBean to kick it off
         myHandler.postDelayed(myRunnable, 100);
     };
+
+    //public void createGattClient()
+    //{
+    //    gc = new GattClient(myHandler,myBean.getDevice());
+    //    gc.connect(myContext,myBean.getDevice());
+    //}
+    //public GattClient getGattClient() { return gc; }
+    //public void closeGattClient() { gc.disconnect(); gc.close(); }
+
+    // if I'm already polling, start/stop reading scratch data
+    public void startReadingScratchData() { readScratchDataBool = true; }
+    public void stopReadingScratchData() { readScratchDataBool = false; }
 
     public void disconnectBean()
     {
@@ -137,11 +161,11 @@ public class MetaBean implements BeanListener
                     if (lastAcceleration != result) {
                         if (calculateDelta(lastAcceleration,result) > delta) {
                             haveMoved = true;
-                            Log.d(TAG,"MetaBean detected movement");
+                            Log.d(TAG,"MetaBean detected movement from "+myName);
                         }
                         else {
                             haveMoved = false;
-                            Log.d(TAG,"MetaBean detected no movement");
+                            Log.d(TAG,"MetaBean detected no movement from "+myName);
                         }
                     }
                     lastAcceleration = result;
@@ -164,11 +188,38 @@ public class MetaBean implements BeanListener
 
             });
 
+            if (readScratchDataBool) {
+                myBean.readScratchData(BANK_1, new Callback<ScratchData>() {
+                   @Override
+                   public void onResult(ScratchData result)
+                   {
+                       ByteBuffer bb;
+
+                       //Log.d(TAG,"Read Scratch Data "+result);
+                       //Log.d(TAG,"Read Scratch Data number: "+result.number());
+                       //Log.d(TAG,"Read Scratch Data length "+result.data().length);
+                       bb = ByteBuffer.wrap(result.data());
+                       bb.order(ByteOrder.LITTLE_ENDIAN);
+                       lastMoisture = bb.getInt();
+                       Log.d(TAG,"Read Scratch Data conversion: "+lastMoisture+" from "+myName);
+                       // when no moisture detected, the value is around 1023
+                       // when moisture detected, connection is made and
+                       // value drops to under 800 or so
+                       if (lastMoisture <= moistureThreshold) {
+                           moistureDetected = true;
+                       }
+                       else {
+                           moistureDetected = false;
+                       }
+                   }
+                });
+            } // if readScratchDataBool
+
             myHandler.postDelayed(myRunnable, 1000);
 
-        }
+        } // if isConnected
 
-    }
+    } // pollBeanData
 
     private void setLedColor(LedColor aColor) {  }
 
@@ -197,8 +248,12 @@ public class MetaBean implements BeanListener
     public String getBeanFirmwareVersion() { return myFirmwareVersion; }
     public BatteryLevel getBeanBatteryLevel() { return lastBatteryLevel; }
     public Integer getBeanTemperature() { return lastTemperature; }
+    public int getMoisture() { return lastMoisture; }
     public Acceleration getBeanAcceleration() { return lastAcceleration; }
     public boolean detectMovement() { return haveMoved; }
+    public int getMoistureThreshold() { return moistureThreshold; }
+    public void setMoistureThreshold(int anInt) { moistureThreshold = anInt; }
+    public boolean isMoistureDetected() { return moistureDetected; }
 
     @Override
     public void onConnected()
@@ -234,9 +289,10 @@ public class MetaBean implements BeanListener
 
 
     @Override
-    public void onScratchValueChanged(ScratchBank bank, byte[] value) {
-        Log.d(TAG,"onScratchValueChanged");
-        Log.d(TAG,"bank: "+bank+"\tvalue: "+value);
+    public void onScratchValueChanged(ScratchBank bank, byte[] value)
+    {
+        //Log.d(TAG,"onScratchValueChanged");
+        //Log.d(TAG,"bank: "+bank+"\tvalue: "+value);
 
         //appendText("Scratch value changed\n");
 
@@ -245,7 +301,7 @@ public class MetaBean implements BeanListener
     @Override
     public void onSerialMessageReceived(byte[] data)
     {
-        Log.d(TAG,"Bean "+myName+" serial message received of "+data.length+" bytes");
+        //Log.d(TAG,"Bean "+myName+" serial message received of "+data.length+" bytes");
     }
 
 

@@ -142,7 +142,8 @@ public class MonitorActivity extends AppCompatActivity implements BeanDiscoveryL
 
 
     @Override
-    public void onBeanDiscovered(Bean bean, int rssi) {
+    public void onBeanDiscovered(Bean bean, int rssi)
+    {
         Log.d(TAG,"A bean is found: "+bean);
 
         //appendText("Found a bean "+bean.describe()+"\n");
@@ -157,7 +158,7 @@ public class MonitorActivity extends AppCompatActivity implements BeanDiscoveryL
             beanList.add(new MetaBean(bean, this));
         }
 
-    }
+    } // onBeanDiscovered
 
     @Override
     public void onDiscoveryComplete() {
@@ -180,7 +181,8 @@ public class MonitorActivity extends AppCompatActivity implements BeanDiscoveryL
             // set icon
             imageView.setImageResource(R.mipmap.status_ok);
         }
-    }
+
+    } // onDiscoveryComplete
 
     private boolean isBeanOnList(Bean aBean)
     {
@@ -233,6 +235,7 @@ public class MonitorActivity extends AppCompatActivity implements BeanDiscoveryL
     {
         Log.d(TAG,"Monitor polling metabean status");
         boolean haveMoved = false;
+        boolean moistureDetected = false;
 
         if (pollBeans == true) {
 
@@ -242,11 +245,21 @@ public class MonitorActivity extends AppCompatActivity implements BeanDiscoveryL
                 }
             }
 
-            if (haveMoved == true) {
-                Log.d(TAG,"Monitor setting status to bad");
-                imageView.setImageResource(R.mipmap.status_bad);
+            for (MetaBean aMetaBean: beanList) {
+                if (aMetaBean.isMoistureDetected()) {
+                    moistureDetected = true;
+                }
             }
-            else {
+
+            if ((haveMoved == true) || (moistureDetected == true)) {
+                Log.d(TAG,"Monitor setting status to bad");
+                if (moistureDetected)
+                    imageView.setImageResource(R.mipmap.moisture512);
+                else
+                    imageView.setImageResource(R.mipmap.movement512);
+            }
+
+            if ((haveMoved == false) && (moistureDetected == false)) {
                 Log.d(TAG,"Monitor setting status to OK");
                 imageView.setImageResource(R.mipmap.status_ok);
             }

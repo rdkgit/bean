@@ -28,6 +28,7 @@ import com.punchthrough.bean.sdk.Bean;
 import com.punchthrough.bean.sdk.BeanDiscoveryListener;
 import com.punchthrough.bean.sdk.BeanListener;
 import com.punchthrough.bean.sdk.BeanManager;
+import com.punchthrough.bean.sdk.internal.ble.GattClient;
 import com.punchthrough.bean.sdk.message.Acceleration;
 import com.punchthrough.bean.sdk.message.BatteryLevel;
 import com.punchthrough.bean.sdk.message.BeanError;
@@ -139,6 +140,7 @@ public class MainActivity extends AppCompatActivity implements BeanDiscoveryList
             for (MetaBean aBean : beanList) {
                  appendText("Going to connect to bean "+aBean.getBeanName()+"\n");
                  aBean.connectBean();
+                 //aBean.createGattClient();
              }
         }
     }
