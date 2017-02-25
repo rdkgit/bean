@@ -60,6 +60,11 @@ public class MetaBean implements BeanListener
     private int lastMoisture;
     private boolean moistureDetected = false;
     private int moistureThreshold = 800;
+    //private int temperatureThreshold = 37; 98.6F
+    private int temperatureThreshold = 33;
+    private boolean temperatureWarning = false;
+    private boolean batteryWarning = false;
+    private int batteryThreshold = 5;
 
     public MetaBean(Bean aBean, Context aContext)
     {
@@ -177,6 +182,10 @@ public class MetaBean implements BeanListener
                 public void onResult(BatteryLevel aLevel) {
                     Log.d(TAG,"Battery level "+aLevel+" read from "+myName);
                     lastBatteryLevel = aLevel;
+                    if (lastBatteryLevel.getPercentage() <= batteryThreshold) {
+                        Log.d(TAG,"MetaBean: battery percentage warning "+lastBatteryLevel.getPercentage()+" from "+myName);
+                        batteryWarning = true;
+                    }
                 }
             });
             myBean.readTemperature(new Callback<Integer>() {
@@ -184,6 +193,13 @@ public class MetaBean implements BeanListener
                 public void onResult(Integer temp) {
                     Log.d(TAG,"Temperature "+temp+" read from "+myName);
                     lastTemperature = temp;
+                    if (lastTemperature >= temperatureThreshold) {
+                        Log.d(TAG,"Temperature warning from "+myName);
+                        temperatureWarning = true;
+                    }
+                    else {
+                        temperatureWarning = false;
+                    }
                 }
 
             });
@@ -198,6 +214,8 @@ public class MetaBean implements BeanListener
                        //Log.d(TAG,"Read Scratch Data "+result);
                        //Log.d(TAG,"Read Scratch Data number: "+result.number());
                        //Log.d(TAG,"Read Scratch Data length "+result.data().length);
+                       // if no moisture sensor is detected, we still get a reading XXX
+
                        bb = ByteBuffer.wrap(result.data());
                        bb.order(ByteOrder.LITTLE_ENDIAN);
                        lastMoisture = bb.getInt();
@@ -254,6 +272,12 @@ public class MetaBean implements BeanListener
     public int getMoistureThreshold() { return moistureThreshold; }
     public void setMoistureThreshold(int anInt) { moistureThreshold = anInt; }
     public boolean isMoistureDetected() { return moistureDetected; }
+    public int getTemperatureThreshold() { return temperatureThreshold; }
+    public void setTemperatureThreshold(int anInt) { temperatureThreshold = anInt; }
+    public boolean isTemperatureWarning() { return temperatureWarning; }
+    public boolean isBatteryLow() { return batteryWarning; }
+    public int getBatteryThreshold() { return batteryThreshold; }
+    public void setBatteryThreshold(int anInt) { batteryThreshold = anInt; }
 
     @Override
     public void onConnected()

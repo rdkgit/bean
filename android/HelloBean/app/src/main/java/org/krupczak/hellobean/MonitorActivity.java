@@ -236,6 +236,8 @@ public class MonitorActivity extends AppCompatActivity implements BeanDiscoveryL
         Log.d(TAG,"Monitor polling metabean status");
         boolean haveMoved = false;
         boolean moistureDetected = false;
+        boolean tempWarning = false;
+        boolean batteryWarning = false;
 
         if (pollBeans == true) {
 
@@ -244,22 +246,39 @@ public class MonitorActivity extends AppCompatActivity implements BeanDiscoveryL
                     haveMoved = true;
                 }
             }
-
             for (MetaBean aMetaBean: beanList) {
                 if (aMetaBean.isMoistureDetected()) {
                     moistureDetected = true;
                 }
             }
-
-            if ((haveMoved == true) || (moistureDetected == true)) {
-                Log.d(TAG,"Monitor setting status to bad");
-                if (moistureDetected)
-                    imageView.setImageResource(R.mipmap.moisture512);
-                else
-                    imageView.setImageResource(R.mipmap.movement512);
+            for (MetaBean aMetaBean: beanList) {
+                if (aMetaBean.isTemperatureWarning()) {
+                    tempWarning = true;
+                }
+            }
+            for (MetaBean aMetaBean: beanList) {
+                if (aMetaBean.isBatteryLow()) {
+                    batteryWarning = true;
+                }
             }
 
-            if ((haveMoved == false) && (moistureDetected == false)) {
+            if ((haveMoved == true) || (moistureDetected == true) || (tempWarning == true) || (batteryWarning == true)) {
+                Log.d(TAG,"Monitor setting status to bad");
+                if (moistureDetected) {
+                    imageView.setImageResource(R.mipmap.moisture512);
+                }
+                if (haveMoved) {
+                    imageView.setImageResource(R.mipmap.movement512);
+                }
+                if (tempWarning) {
+                    imageView.setImageResource(R.mipmap.tempwarning);
+                }
+                if (batteryWarning) {
+                    imageView.setImageResource(R.mipmap.batterywarn);
+                }
+            }
+
+            if ((haveMoved == false) && (moistureDetected == false) && (tempWarning == false) && (batteryWarning == false)) {
                 Log.d(TAG,"Monitor setting status to OK");
                 imageView.setImageResource(R.mipmap.status_ok);
             }
@@ -278,6 +297,9 @@ public class MonitorActivity extends AppCompatActivity implements BeanDiscoveryL
 
         // refresh and re-scan
         if (id == R.id.action_refresh) {
+            refreshBeans();
+            beanManager.setScanTimeout(5);
+            beanManager.startDiscovery(this);
         }
         if (id == R.id.action_start_monitoring) {
             appendText("Starting/re-starting bean polling\n");
